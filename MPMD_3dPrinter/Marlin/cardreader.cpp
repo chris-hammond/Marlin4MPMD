@@ -127,7 +127,10 @@ void CardReader::initsd()
 
 char *createFilename(char *buffer,FILINFO *pEntry) //buffer>12characters
 {
-  char *pos=buffer;
+#if _USE_LFN != 0
+	return (char *) pEntry->fname;
+#else
+	char *pos=buffer;
 
   for (uint8_t i = 0; i < 11; i++) 
   {
@@ -140,6 +143,7 @@ char *createFilename(char *buffer,FILINFO *pEntry) //buffer>12characters
   }
   *pos++=0;
   return buffer;
+#endif
 }
 
 void CardReader::lsDive(const char *prepend, DIR *parent, const char * const match/*=NULL*/)
@@ -163,10 +167,10 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       path[0]=0;
       if(strlen(prepend)==0) //avoid leading / if already in prepend
       {
-       strcat(path,"/");
+       strncat(path,"/", MAXPATHNAMELENGTH - strlen(path));
       }
-      strcat(path,prepend);
-      strcat(path,lfilename);
+      strncat(path,prepend, MAXPATHNAMELENGTH - strlen(path));
+      strncat(path,lfilename, MAXPATHNAMELENGTH - strlen(path));
       
       if (f_opendir(&subDir,path) != FR_OK) 
       {
@@ -179,7 +183,7 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       }
       else
       {
-        strcat(path,"/");
+        strncat(path,"/", MAXPATHNAMELENGTH - strlen(path));
         lsDive(path,&subDir);  
         //close done automatically by destructor of SdFile
       }
@@ -207,9 +211,12 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
 
       if(lsAction==LS_SerialPrint)
       {
-        char pathAndFilename[LONG_FILENAME_LENGTH] = "\n";
-        strcat(pathAndFilename, prepend);
-        strcat(pathAndFilename, entry.fname);
+    	// NOTE: if, in the unlikely event that the total LFN + Path exceeds
+        // LONG_FILENAME_LENGTH, the output of this will be truncated, rather
+        // than overflowing memory
+        char pathAndFilename[LONG_FILENAME_LENGTH+2] = "\n";
+        strncat(pathAndFilename, prepend, LONG_FILENAME_LENGTH - strlen(pathAndFilename));
+        strncat(pathAndFilename, entry.fname, LONG_FILENAME_LENGTH - strlen(pathAndFilename));
         strcat(pathAndFilename, "\n");
         SERIAL_PROTOCOL_N((uint8_t *)pathAndFilename, strlen(pathAndFilename));
       }
@@ -220,8 +227,9 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       else if(lsAction==LS_GetFilename)
       {
     	strcpy(filename,entry.fname);
-    	strcpy(longFilename, prepend);
-    	strcat(longFilename, entry.fname);
+    	// NOTE: This will truncate, rather than overflowing
+    	strncpy(longFilename, prepend, LONG_FILENAME_LENGTH);
+    	strncat(longFilename, entry.fname, LONG_FILENAME_LENGTH - strlen(longFilename));
         if (match != NULL) {
           if (strcasecmp(match, entry.fname) == 0) return;
         }
