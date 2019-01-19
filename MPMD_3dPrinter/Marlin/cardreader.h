@@ -41,11 +41,11 @@
 #define MAX_DIR_DEPTH (1)
 
 #if _USE_LFN != 0
-// We're going to "cheat" and assume that Path+LFN is less than 2x MAX_LFN
+// We're going to "cheat" and assume that Path+LFN is less than MAX_LFN
 // We'll need to add protection to truncate strcat calls to do this.
 #define MAXPATHNAMELENGTH		(_MAX_LFN)
 #define FILENAME_LENGTH 		(_MAX_LFN)
-#define LONG_FILENAME_LENGTH 	(_MAX_LFN*2)
+#define LONG_FILENAME_LENGTH 	(_MAX_LFN)
 #else
 // Maximum length of path
 #define MAXPATHNAMELENGTH (13*MAX_DIR_DEPTH+MAX_DIR_DEPTH+1)
