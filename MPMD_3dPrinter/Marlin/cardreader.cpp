@@ -128,7 +128,8 @@ void CardReader::initsd()
 char *createFilename(char *buffer,FILINFO *pEntry) //buffer>12characters
 {
 #if _USE_LFN != 0
-	return (char *) pEntry->fname;
+	strncpy(buffer, pEntry->fname, _MAX_LFN);
+	return buffer;
 #else
 	char *pos=buffer;
 
@@ -160,8 +161,8 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
     if ((entry.fattrib & AM_DIR) && (lsAction != LS_Count) && (lsAction != LS_GetFilename)) // hence LS_SerialPrint
     {
       DIR subDir;
-      char path[MAXPATHNAMELENGTH];
-      char lfilename[FILENAME_LENGTH];
+      static char path[MAXPATHNAMELENGTH];
+      static char lfilename[FILENAME_LENGTH];
       createFilename(lfilename,&entry);
       
       path[0]=0;
@@ -203,10 +204,14 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       if(!filenameIsDir)
       {
         char *ptr = strchr(entry.fname, '.');
-        if ((ptr==NULL) || (ptr-entry.fname >= 12) || (*(ptr+1)!='G'))
+        if ((ptr==NULL) || ((*(ptr+1)!='G') && (*(ptr+1)!='g') && (*(ptr+1)!='b')) )
         {
           continue;
         }
+      }
+      else if(0 == strncmp(entry.fname, "System Volume", 13))
+      {
+    	  continue;
       }
 
       if(lsAction==LS_SerialPrint)
