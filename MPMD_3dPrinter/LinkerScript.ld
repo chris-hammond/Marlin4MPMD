@@ -58,7 +58,9 @@ _estack = 0x20004000;    /* end of RAM */
 _Min_Heap_Size = 0;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
-_StartRom = DEFINED(VectorTable) ? 0x8002000 : 0x8000000;
+/*_StartRom = DEFINED(VectorTable) ? 0x8002000 : 0x8000000;*/
+/*_RomLen = DEFINED(VectorTable) ? 120K : 128K;*/
+_StartRom = 0x8000000;
 _RomLen = DEFINED(VectorTable) ? 120K : 128K;
 /* Memories definition */
 MEMORY
@@ -72,6 +74,13 @@ VTRAM (xrw)	: ORIGIN = 0x20000000, LENGTH = 0xc0/*Vector table Ram*/
 /* Sections */
 SECTIONS
 {
+  .bootloader :
+  {
+    . = ALIGN(4);
+    KEEP(*(.bootloader)) /* Startup code */
+    . = ALIGN(4);
+  } >ROM
+  
   /* The startup code into ROM memory */
   .isr_vector :
   {

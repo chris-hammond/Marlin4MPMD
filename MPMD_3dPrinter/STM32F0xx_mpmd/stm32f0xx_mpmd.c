@@ -134,7 +134,7 @@ static SPI_HandleTypeDef hnucleo_Spi;
 //#ifdef ADAFRUIT_TFT_JOY_SD_ID802
 //
 #ifdef HAL_SPI_MODULE_ENABLED
-static void SPIx_Init(void);
+static void SPIx_Init(uint32_t baud_prescaler);
 static void SPIx_Write(uint8_t Value);
 static void SPIx_WriteReadData(const uint8_t *DataIn, uint8_t *DataOut, uint16_t DataLegnth);
 static void SPIx_FlushFifo(void);
@@ -383,8 +383,8 @@ static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
 #else
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 #endif
-//  GPIO_InitStruct.Pull  = GPIO_NOPULL;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull  = GPIO_NOPULL;
+//  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(NUCLEO_SPIx_MISO_MOSI_GPIO_PORT, &GPIO_InitStruct);
 
 
@@ -393,7 +393,7 @@ static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
 /**
   * @brief  Initializes SPI HAL.
   */
-static void SPIx_Init(void)
+static void SPIx_Init(uint32_t baud_prescaler)
 {
  if(HAL_SPI_GetState(&hnucleo_Spi) == HAL_SPI_STATE_RESET)
  {
@@ -408,7 +408,7 @@ static void SPIx_Init(void)
 	      - For STM32F412ZG devices: 12,5 MHz maximum (PCLK2/SPI_BAUDRATEPRESCALER_8 = 100 MHz/8 = 12,5 MHz)
 		  - For STM32F446ZE/STM32F429ZI devices: 11,25 MHz maximum (PCLK2/SPI_BAUDRATEPRESCALER_8 = 90 MHz/8 = 11,25 MHz)
    */
-    hnucleo_Spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+    hnucleo_Spi.Init.BaudRatePrescaler = baud_prescaler;
    hnucleo_Spi.Init.Direction = SPI_DIRECTION_2LINES;
    hnucleo_Spi.Init.CLKPhase = SPI_PHASE_2EDGE;
    hnucleo_Spi.Init.CLKPolarity = SPI_POLARITY_HIGH;
@@ -527,7 +527,7 @@ static void SPIx_Error (void)
  HAL_SPI_DeInit(&hnucleo_Spi);
 
  /* Re-Initiaize the SPI communication BUS */
- SPIx_Init();
+ SPIx_Init(SPI_BAUDRATEPRESCALER_128);
 }
 
 /******************************************************************************
@@ -559,7 +559,7 @@ void SD_IO_Init(void)
 
  /*------------Put SD in SPI mode--------------*/
  /* SD SPI Config */
- SPIx_Init();
+ SPIx_Init(SPI_BAUDRATEPRESCALER_128);
 
  /* SD chip select high */
  SD_CS_HIGH();
@@ -571,6 +571,8 @@ void SD_IO_Init(void)
    /* Send dummy byte 0xFF */
    SD_IO_WriteByte(SD_DUMMY_BYTE);
  }
+
+ SPIx_Init(SPI_BAUDRATEPRESCALER_32);
 }
 
 /**

@@ -53,7 +53,7 @@ CardReader::CardReader()
 
 void CardReader::initsd()
 {
-  for(int i=0;i<2;i++) //Attempt two times in case card need released first
+  for(int i=0;i<3;i++) //Attempt two times in case card need released first
   {
 	  cardOK = false;
 
@@ -112,6 +112,7 @@ void CardReader::initsd()
 			  sprintf((char *)buff,"code=%d\n",res);
 			  BSP_CdcIfQueueTxData(buff,sizeof(buff));
 			  release(); //test failed, loop again after releasing
+			  BSP_SD_Init();
 		}
 		else {
 			f_closedir(&testroot);
