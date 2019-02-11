@@ -383,8 +383,8 @@ static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
 #else
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 #endif
-  GPIO_InitStruct.Pull  = GPIO_NOPULL;
-//  GPIO_InitStruct.Pull = GPIO_PULLUP;
+//  GPIO_InitStruct.Pull  = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(NUCLEO_SPIx_MISO_MOSI_GPIO_PORT, &GPIO_InitStruct);
 
 
@@ -395,7 +395,8 @@ static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
   */
 static void SPIx_Init(uint32_t baud_prescaler)
 {
- if(HAL_SPI_GetState(&hnucleo_Spi) == HAL_SPI_STATE_RESET)
+ // NOTE: We skip this check so we can change baud rate on the fly
+ //if(HAL_SPI_GetState(&hnucleo_Spi) == HAL_SPI_STATE_RESET)
  {
    /* SPI Config */
    hnucleo_Spi.Instance = NUCLEO_SPIx;
@@ -572,7 +573,7 @@ void SD_IO_Init(void)
    SD_IO_WriteByte(SD_DUMMY_BYTE);
  }
 
- SPIx_Init(SPI_BAUDRATEPRESCALER_32);
+ SPIx_Init(SPI_BAUDRATEPRESCALER_4);
 }
 
 /**
