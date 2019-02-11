@@ -112,6 +112,7 @@ void CardReader::initsd()
 			  sprintf((char *)buff,"code=%d\n",res);
 			  BSP_CdcIfQueueTxData(buff,sizeof(buff));
 			  release(); //test failed, loop again after releasing
+        BSP_SD_Init(); // Re-initialize the SD card
 		}
 		else {
 			f_closedir(&testroot);
@@ -736,6 +737,10 @@ void CardReader::closefile(bool store_location)
 
 void CardReader::getfilename(uint16_t nr, const char * const match/*=NULL*/)
 {
+  initsd(); // test card
+  if(!cardOK)
+    return;
+
   curDir=&workDir;
   lsAction=LS_GetFilename;
   nrFiles=nr;
@@ -745,6 +750,10 @@ void CardReader::getfilename(uint16_t nr, const char * const match/*=NULL*/)
 
 uint16_t CardReader::getnrfilenames()
 {
+  initsd(); // test card
+  if(!cardOK)
+    return 0;
+
   curDir=&workDir;
   lsAction=LS_Count;
   nrFiles=0;
