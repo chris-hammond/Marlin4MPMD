@@ -116,6 +116,7 @@ void CardReader::initsd()
 			  sprintf((char *)buff,"code=%d\n",res);
 			  MYSERIAL.print((char *)buff);
 			  release(); //test failed, loop again after releasing
+			BSP_SD_Init(); // Re-initialize the SD card
 		}
 		else {
 			f_closedir(&testroot);
