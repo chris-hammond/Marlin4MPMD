@@ -36,7 +36,7 @@
 #define MALYAN_LCD
 //#define E1_ADC_PA2
 //#define STEPPERS_16X
-#define STEPPERS_32X
+//#define STEPPERS_32X
 //Experimental, includes UZLIB for zlib compression support
 //#define UZLIB
 //Experimental, uses optimized SPI library for faster SD transfers
