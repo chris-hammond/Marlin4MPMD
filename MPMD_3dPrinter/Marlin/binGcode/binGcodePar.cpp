@@ -2,7 +2,7 @@
  * binGcodePar.cpp
  *
  *  Created on: Oct 2, 2018
- *      Author: Kuli
+ *      Author: MCheah
  */
 #include <stdlib.h>
 #include <stdint.h>

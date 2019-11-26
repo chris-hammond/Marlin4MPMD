@@ -2,7 +2,7 @@
  * binGcodeCommand.cpp
  *
  *  Created on: Oct 2, 2018
- *      Author: Kuli
+ *      Author: MCheah
  */
 
 #include "binGcodeCommand.h"
@@ -17,7 +17,6 @@ binGcodeCommand::binGcodeCommand() {
 	cmdPrefix = '\0';
 	cmdCode = 0;
 	numPar = 0;
-	// TODO Auto-generated constructor stub
 }
 bool binGcodeCommand::isEqualFormat(const binGcodeCommand &comm) {
 	bool isEqual= (cmdPrefix == comm.cmdPrefix);

@@ -4,7 +4,7 @@
 #include <strings.h>
 
 #if ENABLED(SDSUPPORT)
-unsigned char readBuff[512];
+static unsigned char readBuff[512];
 
 CardReader::CardReader()
 {
@@ -162,8 +162,7 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       DIR subDir;
       char path[MAXPATHNAMELENGTH];
       char lfilename[FILENAME_LENGTH];
-      createFilename(lfilename,&entry);
-      
+      strcpy(lfilename,entry.altname);
       path[0]=0;
       if(strlen(prepend)==0) //avoid leading / if already in prepend
       {
@@ -181,15 +180,14 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
           SERIAL_ECHOLN(path);
         }
       }
-      else
+	  //Do not include hidden folders in the listing
+      else if(entry.fname[0]!='.' && (entry.fattrib & (AM_HID | AM_SYS)) == 0)
       {
         strcat(path,"/");
         lsDive(path,&subDir);  
         //close done automatically by destructor of SdFile
       }
     }
-
-
     else
     {
       char fn0 = entry.fname[0];
@@ -203,7 +201,6 @@ void CardReader::lsDive(const char *prepend, DIR *parent, const char * const mat
       if(!filenameIsDir)
       {
         char *ptr = strchr(entry.fname, '.');
-//        if ((ptr==NULL) || (ptr-entry.fname >= 12) || (*(ptr+1)!='G'))
         if(ptr==NULL)
         {
           continue;
@@ -729,8 +726,6 @@ void CardReader::push_read_buff(int len)
 
 void CardReader::write_buff(unsigned char *buf,uint32_t len)
 {
-#ifdef STM32_USE_USB_CDC
-#endif
   if(len==512)
 	  BSP_LED_On(LED_RED);
   BSP_LED_On(LED_GREEN);
@@ -749,10 +744,7 @@ void CardReader::write_buff(unsigned char *buf,uint32_t len)
   BSP_LED_Off(LED_GREEN);
   BSP_LED_Off(LED_BLUE);
   BSP_LED_Off(LED_RED);
-#ifdef STM32_USE_USB_CDC
-#endif
 }
-
 
 void CardReader::write_command(char *buf)
 {

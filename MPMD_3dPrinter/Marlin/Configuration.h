@@ -278,9 +278,7 @@
 // PID Tuning Guide here: http://reprap.org/wiki/PID_Tuning
 
 // Comment the following line to disable PID and enable bang-bang.
-//#if DISABLED(MINIMAL_BUILD)
 #define PIDTEMP
-//#endif
 #define BANG_MAX 255 // limits current to nozzle while in bang-bang mode; 255=full current
 #define PID_MAX BANG_MAX // limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
 #if ENABLED(PIDTEMP)
@@ -331,9 +329,7 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-//#if DISABLED(MINIMAL_BUILD)
 #define PIDTEMPBED
-//#endif
 
 //#define BED_LIMIT_SWITCHING
 
@@ -374,11 +370,11 @@
 
 //this prevents dangerous Extruder moves, i.e. if the temperature is under the limit
 //can be software-disabled for whatever purposes by
-//#if DISABLED(MINIMAL_BUILD)
+#if DISABLED(MINIMAL_BUILD)
 #define PREVENT_DANGEROUS_EXTRUDE
 //if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
 #define PREVENT_LENGTHY_EXTRUDE
-//#endif
+#endif
 #define EXTRUDE_MINTEMP 170
 #define EXTRUDE_MAXLENGTH (X_MAX_LENGTH+Y_MAX_LENGTH) //prevent extrusion of very large distances.
 
@@ -397,10 +393,10 @@
  * If you get "Thermal Runaway" or "Heating failed" errors the
  * details can be tuned in Configuration_adv.h
  */
-//#if DISABLED(MINIMAL_BUILD)
+#if DISABLED(MINIMAL_BUILD)
 #define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
 #define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
-//#endif
+#endif
 //===========================================================================
 //============================= Mechanical Settings =========================
 //===========================================================================
@@ -744,10 +740,7 @@
 //===========================================================================
 
 // @section bedlevel
-//TODO: re-enable later
-#if DISABLED(MINIMAL_BUILD) || 1
-#define AUTO_BED_LEVELING_FEATURE // Delete the comment to enable (remove // at the start of the line)
-#endif
+#define AUTO_BED_LEVELING_FEATURE
 // Enable this feature to get detailed logging of G28, G29, M48, etc.
 // Logging is off by default. Enable this logging feature with 'M111 S32'.
 // NOTE: Requires a huge amount of PROGMEM.
@@ -1108,9 +1101,7 @@
 // you must uncomment the following option or it won't work.
 //
 #define FLASH_SETTINGS
-#if DISABLED(MINIMAL_BUILD) || 1
 #define SDSUPPORT
-#endif
 #if ENABLED(SDSUPPORT) && DISABLED(FLASH_SETTINGS)
   #define SD_SETTINGS
   #define CONFIG_FILE_NAME "m_cfg.g"

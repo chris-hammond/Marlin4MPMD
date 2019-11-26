@@ -61,13 +61,14 @@
 #include "nozzle.h"
 #include "duration_t.h"
 
-#ifdef SDSUPPORT
+#if ENABLED(SDSUPPORT)
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
-//#include "uzlib.h"
+#if ENABLED(UZLIB)
 #include "tgunzip.h"
+#endif //ENABLED(UZLIB)
 #include "binGcodeCommand.h"
-#endif
+#endif //ENABLED(SDSUPPORT)
 
 #if ENABLED(USE_WATCHDOG)
   #include "watchdog.h"
@@ -822,9 +823,9 @@ void setup_sdcard()
 #if ENABLED(SD_SETTINGS)
   	  if(p_card->cardOK)
 		Config_RetrieveSettings();
-#endif
+#endif //ENABLED(SD_SETTINGS)
   }
-#endif
+#endif //ENABLED(SDSUPPORT)
 }
 
 void suicide() {
@@ -938,12 +939,6 @@ void setup() {
       SERIAL_ECHOLNPGM(__DATE__);
     #endif // STRING_CONFIG_H_AUTHOR
   #endif // STRING_DISTRIBUTION_DATE
-
-//  SERIAL_ECHO_START;
-//  SERIAL_ECHOPGM(MSG_FREE_MEMORY);
-//  SERIAL_ECHO(freeMemory());
-//  SERIAL_ECHOPGM(MSG_PLANNER_BUFFER_BYTES);
-//  SERIAL_ECHOLN((int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
 
   // Send "ok" after commands by default
   for (int8_t i = 0; i < BUFSIZE; i++) send_ok[i] = true;
@@ -1781,6 +1776,7 @@ inline void set_destination_to_current() { memcpy(destination, current_position,
  *  Plan a move to (X, Y, Z) and set the current_position
  *  The final current_position may not be the one that was requested
  */
+//This move differs in that it does not split move into segments
   void do_blocking_move_to2(float target[],float fr_mm_m=0)
   {
 	  float old_feedrate_mm_m = feedrate_mm_m;
@@ -2255,7 +2251,7 @@ static void clean_up_after_endstop_or_probe_move() {
       }
     #endif
     do_blocking_move_to_xy(oldXpos, oldYpos); // return to position before deploy
-//    do_blocking_move_to(oldXpos, oldYpos, current_position[Z_AXIS]); // return to position before deploy
+ // return to position before deploy
     endstops.enable_z_probe( deploy );
     return false;
   }
@@ -2611,7 +2607,7 @@ static void clean_up_after_endstop_or_probe_move() {
 
     static float probe_delta_height(float probe_offset, bool stow=true, int verbose=3) {
     	float z_at_pt;
-		SERIAL_PROTOCOLPGM("Probing Delta Height");
+    	SERIAL_PROTOCOLLNPGM("Probing Delta Height");
     	for(int i=0;i<2;i++) { //iterate up to 2 times in case the wrong steps per mm detected
 			set_delta_height(Z_HOME_POS); //set default home position
 			current_position[Z_AXIS] = 0; //set to 0 to ensure we get a safe homing
@@ -2960,6 +2956,7 @@ inline void gcode_G0_G1() {
       }
 
     #endif //FWRETRACT
+
     prepare_move_to_destination();
   }
 }
@@ -3159,16 +3156,15 @@ inline void gcode_G28() {
   #if ENABLED(DEBUG_LEVELING_FEATURE)
     if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM(">>> gcode_G28");
   #endif
-
+  static bool safeHomeEN = true;
+  if(code_seen('S'))
+	  safeHomeEN = code_value_bool();
   // Wait for planner moves to finish!
   stepper.synchronize();
 
   // For auto bed leveling, clear the level matrix
   #if ENABLED(AUTO_BED_LEVELING_FEATURE)
     planner.bed_level_matrix.set_to_identity();
-    #if ENABLED(DELTA)
-    //bed_leveling_in_progress = true;
-    #endif
   #endif
 
   // Always home with tool 0 active
@@ -3215,7 +3211,7 @@ inline void gcode_G28() {
     /**
      * A delta can only safely home all axes at the same time
      */
-    bool safeHome = (current_position[Z_AXIS] <= delta_clip_start_height + calc_delta_adjust(current_position)); //Add delts adjust to remove the mesh calibration contribution
+    bool safeHome = (current_position[Z_AXIS] <= delta_clip_start_height + calc_delta_adjust(current_position)); //Add delta adjust to remove the mesh calibration contribution
     // Pretend the current position is 0,0,0
     // This is like quick_home_xy() but for 3 towers.
     current_position[X_AXIS] = current_position[Y_AXIS] = current_position[Z_AXIS] = 0.0;
@@ -3473,12 +3469,11 @@ inline void gcode_G28() {
 
   #if ENABLED(DELTA)
     // move to a height where we can use the full xy-area
-    if(safeHome)
+    if(safeHome && safeHomeEN)
     	do_blocking_move_to_z(delta_clip_start_height-3);
   #endif
 
   clean_up_after_endstop_or_probe_move();
-  //bed_leveling_in_progress = false;
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
     if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("<<< gcode_G28");
@@ -3488,8 +3483,6 @@ inline void gcode_G28() {
   #if HOTENDS > 1
     tool_change(old_tool_index, 0, true);
   #endif
-
-//  report_current_position();
 }
 
 #if HAS_PROBING_PROCEDURE
@@ -3763,7 +3756,6 @@ static inline float calc_grid_position(int i, AxisEnum axis)
 
     bool dryrun = code_seen('D');
     float dry_bed_level[AUTO_BED_LEVELING_GRID_POINTS][AUTO_BED_LEVELING_GRID_POINTS];
-//    bool stow_probe_after_each = code_seen('E');
     bool stow_probe_after_each = false;
     float zoffset = 0;
     if (code_seen('Z')) zoffset += code_value_axis_units(Z_AXIS);
@@ -3896,7 +3888,6 @@ static inline float calc_grid_position(int i, AxisEnum axis)
 
     // Deploy the probe. Probe will raise if needed.
     if (DEPLOY_PROBE()) return;
-//    if(!dryrun)
     bed_leveling_in_progress = true;
 
     #if ENABLED(AUTO_BED_LEVELING_GRID)
@@ -4227,7 +4218,9 @@ static inline float calc_grid_position(int i, AxisEnum axis)
 	  bool dryrun = code_seen('D');
 	  bool clear = code_seen('C');
 	  float adjFactor = code_seen('A') ? 1/code_value_float() : 1/0.85;
-	  const float probeAngles[3] = {RADIANS(210-120),RADIANS(330-120),RADIANS(90-120)};
+	  const float probeAngles[3] = {RADIANS(210-120 + delta_tower_angle_trim[A_AXIS]),
+			  	  	  	  	  	  	  RADIANS(330-120 + delta_tower_angle_trim[B_AXIS]),
+									  RADIANS(90-120 + delta_tower_angle_trim[C_AXIS]) };
 	  float xProbe[4] = {0,0,0,0};
 	  float yProbe[4] = {0,0,0,0};
 	  float measured_z[4];
@@ -4590,13 +4583,15 @@ inline void gcode_M31() {
 
     /**
      * M34: Start Binary SD Write
+     * to mark end of transmission, host must wait 1 second idle, and then send full M29\r\n 
+     * string within 1 second
      */
     enum M34_state {
-    	M34_IDLE,
-		M34_M,
-		M34_M2,
-		M34_M29,
-		M34_RX
+    	M34_IDLE, //No M29 reception
+		M34_M, //M received
+		M34_M2, //M2 received
+		M34_M29, //M29 received
+		M34_RX //Matched whole string
     };
 	#define M34_TIMEOUT 1000
     inline void gcode_M34() {
@@ -4608,14 +4603,15 @@ inline void gcode_M31() {
       else
         namestartpos++; //to skip the '!'      
 #if ENABLED(MALYAN_LCD)
+      //Support progress bar display on LCD if we are given a file size
       if(code_seen('S') && (seen_pointer < namestartpos)) {
     	  filesize = code_value_int();
     	  lcd_setpercent(0);
     	  lcd_setstatuspgm(PSTR(MSG_RESUME));
     	  print_job_timer.start();
     	  lcd_setstatuspgm(PSTR(MSG_RESUMED));    	  
-      }
-#endif
+      } //code_seen('S')
+#endif //ENABLED(MALYAN_LCD)
       uint8_t M34_state = M34_IDLE;
       p_card->openFile(namestartpos, false);
       if(!p_card->saving)
@@ -4630,31 +4626,31 @@ inline void gcode_M31() {
       uint16_t SD_idx = 0;
       const char M29_CMD[] = "M29\r\n";
       bool CTS = true;
+      // Keep capturing data until we receive M29
       while(M34_state != M34_RX) {
     	  if(MYSERIAL.available(false)>0) {
     		  SD_idx += MYSERIAL.read(&SDbuff[SD_idx],512-SD_idx);
     		  switch(M34_state) {
     		  case M34_IDLE:
-//    			  sprintf(chbuff,"sState = %d str=%s\r\n",M34_state,SDbuff);
-//    			  MYSERIAL.print(chbuff);
+            //Has it been at least 1 second since last reception?
     			  if(PENDING(millis(),last_rx+M34_TIMEOUT)) {
     				  last_rx = millis();
     			  }
+            //We don't have enough characters to match M29 yet, but let's at least see if they start to match
     			  else if(SD_idx < sizeof(M29_CMD)-1 && memcmp(SDbuff,M29_CMD,SD_idx)==0) {
     				  last_rx = millis();
     				  M34_state = M34_M29;
     			  }
+            //We've received enough characters to match M29, do full comparison to see if it matches
     			  else if(SD_idx==sizeof(M29_CMD)-1 && memcmp(SDbuff,M29_CMD,SD_idx)==0) {
     				  M34_state = M34_RX;
     			  }
+            //Regular data reception
     			  else
     				  last_rx = millis();
     			  break;
-//    			  sprintf(chbuff,"eState = %d \r\n",M34_state);
-//    			  MYSERIAL.print(chbuff);
+          //We've started getting M29 data, don't write to file until we know it doesn't match
     		  case M34_M29:
-//    			  sprintf(chbuff,"sState = %d str=%s\r\n",M34_state,SDbuff);
-//    			  MYSERIAL.print(chbuff);
     			  if(PENDING(millis(),last_rx+M34_TIMEOUT)) {
         			  if(SD_idx < sizeof(M29_CMD)-1 && memcmp(SDbuff,M29_CMD,SD_idx)==0) { }
         			  else if(SD_idx==sizeof(M29_CMD)-1 && memcmp(SDbuff,M29_CMD,SD_idx)==0) {
@@ -4665,80 +4661,18 @@ inline void gcode_M31() {
     			  }
     			  else
     				  M34_state = M34_IDLE;
-//    			  sprintf(chbuff,"eState = %d \r\n",M34_state);
-//    			  MYSERIAL.print(chbuff);
     			  break;
     		  case M34_RX:
-//    			  sprintf(chbuff,"sState = %d str=%s\r\n",M34_state,SDbuff);
-//    			  MYSERIAL.print(chbuff);
     			  continue;
     			  break;
-    		  }
-    		  /*if(millis()-last_rx>M34_TIMEOUT && SD_idx==sizeof(M29_CMD)-1)
-    			  M34_state = memcmp(SDbuff,M29_CMD,sizeof(M29_CMD)-1)==0 ? M34_RX : M34_IDLE;
-    		  else if(millis()-last_rx>M34_TIMEOUT && SD_idx < sizeof(M29_CMD)) {
-    			  if(memcmp(SDbuff,M29_CMD,SD_idx)!=0)
-    				  last_rx = millis();
-    		  }
-    		  else
-    			  last_rx = millis();*/
-
-    			  //if(M34_state==M34_IDLE)
-//    		  char serial_char = MYSERIAL.read();
-//    		  switch(M34_state) {
-//    		  	  case M34_IDLE:
-//    		  		  if((millis()-last_rx>M34_TIMEOUT) && serial_char=='M') {
-//    		  			  SERIAL_PROTOCOLPGM("M Received\r\n");
-//    		  			  M34_state = M34_M; }
-//    		  		  else {
-////    		  			  p_card->write_buff(&serial_char,1);
-//    		  			  SDbuff[SD_idx++] = serial_char;
-//    		  			  last_rx = millis();
-//    		  		  }
-//    		  		  break;
-//    		  	  case M34_M:
-//    		  		  if((millis()-last_rx>M34_TIMEOUT) && serial_char=='2') {
-//    		  			SERIAL_PROTOCOLPGM("M2 Received\r\n");
-//    		  			  M34_state = M34_M2; }
-//    		  		  else {
-//    		  			  SERIAL_PROTOCOLPGM("M Received\r\n");
-////    		  			  p_card->write_buff(&serial_char,1);
-//    		  			  SDbuff[SD_idx++] = serial_char;
-//    		  			  last_rx = millis();
-//    		  			  M34_state = M34_IDLE;
-//    		  		  }
-//    		  		  break;
-//    		  	  case M34_M2:
-//    		  		  if((millis()-last_rx>M34_TIMEOUT) && serial_char=='9') {
-//    		  			  SERIAL_PROTOCOLPGM("M29Received\r\n");
-//    		  			  M34_state = M34_M29; }
-//    		  		  else {
-////    		  			  p_card->write_buff(&serial_char,1);
-//    		  			  SDbuff[SD_idx++] = serial_char;
-//    		  			  last_rx = millis();
-//    		  			  M34_state = M34_IDLE;
-//    		  		  }
-//    		  		  break;
-//    		  	  case M34_M29:
-//    		  		  if((millis()-last_rx>M34_TIMEOUT) && (serial_char=='\r' || serial_char=='\n')) {
-//    		  			  SERIAL_PROTOCOLPGM("M\\r\\n Received\r\n");
-//    		  			  M34_state = M34_RX; }
-//    		  		  else {
-////    		  			  p_card->write_buff(&serial_char,1);
-//    		  			  SDbuff[SD_idx++] = serial_char;
-//    		  			  last_rx = millis();
-//    		  			  M34_state = M34_IDLE;
-//    		  		  }
-//    		  		  break;
-//    		  	  case M34_RX:
-//    		  		  break;
-//    		  } //switch(M34_state)
-    	  } //if MYSERIAL.available()>0
-    	  else {
+    		  } //switch(M34_state)
+    	  } //if(MYSERIAL.available) 
+        //Handle incoming queries from LCD
     		  lcd_update();
-    	  }
+        //No data for 1 sec, revert back to idle state
     	  if(M34_state==M34_M29 && millis()-last_rx > M34_TIMEOUT)
     		  M34_state = M34_IDLE;
+        //Check buffer state, send busy signal if buffer is filling up
 #ifndef STM32_USE_USB_CDC
     	  if(CTS && MYSERIAL.available()>= UART_RX_BUFFER_SIZE/2)
 #else
@@ -4748,6 +4682,7 @@ inline void gcode_M31() {
     		  CTS = false;
               SERIAL_ECHOLNPGM(MSG_BUSY_PROCESSING);
     	  }
+        //Check buffer state, sned ok signal if we're ready for new data
 #ifndef STM32_USE_USB_CDC
     	  if(!CTS && MYSERIAL.available()< UART_RX_BUFFER_SIZE/2)
 #else
@@ -4760,13 +4695,20 @@ inline void gcode_M31() {
 
     	  //Flush buff to SD if timeout or we fill sector size
     	  if(M34_state==M34_IDLE && ((SD_idx>0) && (SD_idx==sizeof(SDbuff) || millis()-last_rx > M34_TIMEOUT)))  {
-//			  sprintf(chbuff,"%d write to file %s\r\n",millis()-last_rx,SDbuff);
-//			  MYSERIAL.print(chbuff);
     		  p_card->write_buff(SDbuff,SD_idx);
     		  SD_idx = 0;
     	  }
       } //while(M34_state!= M34_RX)
+      //Transmission complete, check filesize as a rudimentary error check
+      uint32_t byteswritten = p_card->sdpos;
       p_card->closefile();
+      if(filesize>0 && byteswritten!=filesize) {
+          SERIAL_ERROR_START;
+          SERIAL_ERRORLNPGM(MSG_ERR_M34_FILESIZE);
+      }
+      SERIAL_PROTOCOLPAIR("Bytes Received ",byteswritten);
+	    SERIAL_PROTOCOLPAIR("/",filesize);
+      SERIAL_EOL;
       SERIAL_PROTOCOLLNPGM(MSG_FILE_SAVED);
 #if ENABLED(MALYAN_LCD)
       if(filesize>0) {
@@ -6669,7 +6611,11 @@ inline void gcode_M226() {
     else if (!seen_S) {
       // Report current state
       SERIAL_ECHO_START;
-      SERIAL_ECHOPAIR("Cold extrudes are ", (thermalManager.allow_cold_extrude ? "en" : "dis"));
+      SERIAL_ECHOPGM("Cold extrudes are ");
+      if(thermalManager.allow_cold_extrude)
+    	  SERIAL_ECHOPGM("en");
+      else
+    	  SERIAL_ECHOPGM("dis");
       SERIAL_ECHOPAIR("abled (min temp ", int(thermalManager.extrude_min_temp + 0.5));
       SERIAL_ECHOLNPGM("C)");
     }

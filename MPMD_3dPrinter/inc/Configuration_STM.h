@@ -34,8 +34,7 @@
 // LCD for Malyan M200/300 printers.
 //
 #define MALYAN_LCD
-//#define E1_ADC_PA2
-//#define STEPPERS_16X
+#define STEPPERS_16X
 //#define STEPPERS_32X
 //Experimental, includes UZLIB for zlib compression support
 //#define UZLIB

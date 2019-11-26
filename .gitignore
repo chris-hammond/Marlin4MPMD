@@ -465,3 +465,4 @@ STM32F070CB_SD_TEST/
 *.cfg
 stm32MemStream/
 .settings/
+**/.vscode

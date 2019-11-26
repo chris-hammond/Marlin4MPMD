@@ -2,7 +2,7 @@
  * binGcodeCommand.h
  *
  *  Created on: Oct 2, 2018
- *      Author: Kuli
+ *      Author: MCheah
  */
 #include <stdint.h>
 #include "binGcodePar.h"
@@ -18,15 +18,10 @@ public:
 	binGcodePar par[8];
 	uint8_t numPar;
 	binGcodeCommand();
-	// bool parseGcode(char *line);
-	// void encodeBinGcode(char *outBuff);
 	bool isEqualFormat(const binGcodeCommand &comm);
 	bool isEqual(const binGcodeCommand &comm);
 	void decodeBinGcode(uint8_t*& buff, const binGcodeCommand &comm);
 	int writeGcode(char *buff);
-	// static readUntilChar(char *buff);
-//	static int findNextSpace(char *buff);
-// private:
 
 };
 

@@ -2,7 +2,7 @@
  * binGcodePar.h
  *
  *  Created on: Oct 2, 2018
- *      Author: Kuli
+ *      Author: MCheah
  */
 
 #ifndef __BINGCODEPAR_H_
@@ -26,15 +26,11 @@ public:
 	char *parStr;
     gcodeParameterFormat parFormat;
 	binGcodePar();
-	// bool parseGcode(char *line);
-	// void encodeBinGcode(char *outBuff);
 	bool isEqualFormat(const binGcodePar &comm);
 	bool isEqual(const binGcodePar &comm);
     void decodeBinParFormat(uint8_t *buff);
 	void decodeBinParData(uint8_t*& buff);
 	int writeGcode(char * buff);
-	// static readUntilChar(char *buff);
-	// static int findNextSpace(char *buff);
 // private:
 	//TODO:find a less hacky way to deal with large string buffers without excessive memory or malloc
 	static void resetBuff();

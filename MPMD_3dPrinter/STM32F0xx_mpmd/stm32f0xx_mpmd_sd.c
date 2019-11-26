@@ -371,8 +371,6 @@ uint8_t BSP_SD_ReadBlocks(uint32_t* pData, uint32_t ReadAddr, uint16_t BlockSize
   /* Data transfer */
   while (NumberOfBlocks--)
   {
-	//Fill with dummy bytes to re-use the array
-//	memset(pData + offset, SD_DUMMY_BYTE, sizeof(uint8_t)*BlockSize);
 
     /* Send CMD17 (SD_CMD_READ_SINGLE_BLOCK) to read one block */
     /* Check if the SD acknowledged the read block command: R1 response (0x00: no errors) */
@@ -427,8 +425,6 @@ uint8_t BSP_SD_WriteBlocks(uint32_t* pData, uint32_t WriteAddr, uint16_t BlockSi
 {
   uint32_t offset = 0;
   uint8_t retr = BSP_SD_ERROR;
-//  uint8_t blockbuff[BLOCK_SIZE];
-//  uint8_t *ptr = NULL;
   SD_CmdAnswer_typedef response;
 
   /* Send CMD16 (SD_CMD_SET_BLOCKLEN) to set the size of the block and
@@ -440,11 +436,6 @@ uint8_t BSP_SD_WriteBlocks(uint32_t* pData, uint32_t WriteAddr, uint16_t BlockSi
   {
     goto error;
   }
-//  ptr = blockbuff;
-//  if (ptr == NULL)
-//  {
-//    goto error;
-//  }
 
   /* Data transfer */
   while (NumberOfBlocks--)

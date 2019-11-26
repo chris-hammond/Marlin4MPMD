@@ -52,24 +52,6 @@
 /* Private defines -----------------------------------------------------------*/
 /* Private constant ----------------------------------------------------------*/
 
-/*
- *
-// #ifdef USE_XONXOFF
-// #define BSP_CDC_GET_NB_BYTES_IN_RX_BUFFER()  ((gBspUartData.pRxReadBuffer <= gBspUartData.pRxWriteBuffer)? \
-//                                     ( (unsigned int )(gBspUartData.pRxWriteBuffer - gBspUartData.pRxReadBuffer)): \
-//                                     ( (unsigned int )(gBspUartData.pRxWriteBuffer + UART_RX_BUFFER_SIZE - gBspUartData.pRxReadBuffer)))
-
-
-// #define BSP_CDC_GET_NB_BYTES_IN_TX_BUFFER()  ((gBspUartData.pTxReadBuffer <= gBspUartData.pTxWriteBuffer)? \
-//                                     ( (unsigned int )(gBspUartData.pTxWriteBuffer - gBspUartData.pTxReadBuffer)): \
-//                                     ( (unsigned int )(gBspUartData.pTxWriteBuffer + UART_TX_BUFFER_SIZE - gBspUartData.pTxReadBuffer)))
-*/
-
-// #define BSP_CDC_TX_THRESHOLD_XOFF  (UART_TX_BUFFER_SIZE / 50)
-// #define BSP_CDC_TX_THRESHOLD_XON   (UART_TX_BUFFER_SIZE / 100)
-// #define BSP_CDC_RX_THRESHOLD_XOFF  (UART_RX_BUFFER_SIZE / 2)
-// #define BSP_CDC_RX_THRESHOLD_XON   (UART_RX_BUFFER_SIZE / 3)
-// #endif
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -209,31 +191,12 @@ void BSP_CDC_RxCpltCallback(uint8_t* Buf, uint32_t *Len)
 		pRxWriteBuffer = &pRxBuffer[secondBytesToCopy];
 	}
 	BSP_LED_Off(LED_GREEN);
-	if(CDC_RX_BUFFER_SIZE-BSP_CdcGetNbRxAvailableBytes(0)>CDC_RX_BUFFER_SIZE/2)
+//Wait until at least half the buffer is free before signaling to host we are available for reception.	Otherwise check in the timer ISR periodically
+if(CDC_RX_BUFFER_SIZE-BSP_CdcGetNbRxAvailableBytes(0)>CDC_RX_BUFFER_SIZE/2)
 		USBD_CDC_ReceivePacket(&USBD_Device);
-	if(BSP_CdcGetNbRxAvailableBytes(0)<=startnB)
+	//We've overflowed, throw an error
+	if(*Len>0 && BSP_CdcGetNbRxAvailableBytes(0)<=startnB)
 		CDC_ERROR(10);
-	//Copy character by character to avoid wraparound issues
-//	for(uint32_t i=0;i<*Len;i++)
-//	{
-//		//Check next byte location first
-//		uint32_t *j = pRxWriteBuffer + 1;
-//	    if (j >= (pRxBuffer + CDC_RX_BUFFER_SIZE)) {
-//	      j = pRxBuffer;
-//	    }		//Wrap back to 0
-//	    if(j!=pRxReadBuffer) //Buffer is not full
-//	    {
-//			*pRxWriteBuffer = Buf[i];
-//			pRxWriteBuffer = j;
-//	    	BSP_LED_Off(LED_BLUE);
-//	    }
-//	    else
-//	    {
-//	    	BSP_LED_On(LED_BLUE);
-//	    	//CDC_ERROR(7); //Buffer overrun is not fatal, parser will handle garbage data
-//	    }
-//	    debugNbRxFrames++;
-//	}
 }
 
 /******************************************************//**

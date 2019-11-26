@@ -1093,12 +1093,9 @@ void Stepper::report_positions() {
         break;
 
       case Z_AXIS: {
-
-        #if DISABLED(DELTA) || 1 //Enable babystepping on all axis independently, will move towers separately
+//Enable babystepping on all axis independently, will move towers separately
 
           BABYSTEP_AXIS(z, Z, BABYSTEP_INVERT_Z);
-
-        #else // DELTA
 
           bool z_direction = direction ^ BABYSTEP_INVERT_Z;
 
@@ -1124,8 +1121,6 @@ void Stepper::report_positions() {
           X_DIR_WRITE(old_x_dir_pin);
           Y_DIR_WRITE(old_y_dir_pin);
           Z_DIR_WRITE(old_z_dir_pin);
-
-        #endif
 
       } break;
 

@@ -52,7 +52,6 @@
 #ifdef STM32_USE_USB_CDC
 #define CDC_TX_BUFFER_SIZE (128)
 #define CDC_RX_BUFFER_SIZE (512*4)
-//#define CDC_RX_BUFFER_SIZE (96*32)
 #else
 #define CDC_TX_BUFFER_SIZE (1)
 #define CDC_RX_BUFFER_SIZE (1)

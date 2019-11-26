@@ -1249,7 +1249,6 @@ void Temperature::init() {
       case TRFirstHeatingDelayed:
     	  if(ELAPSED(millis(), *timer))
     	  {
-    		  SERIAL_ECHOLNPGM("TIMER ELAPSED\r\n");
     		  *state = TRFirstHeating;
     	  }
     	  break;
@@ -1257,8 +1256,6 @@ void Temperature::init() {
       case TRFirstHeating:
         if (temperature < tr_target_temperature[heater_index]) break;
         *state = TRStable;
-        if(heater_id==-1)
-        	SERIAL_ECHOLNPGM("BED STABLE\r\n");
       // While the temperature is stable watch for a bad temperature
       case TRStable:
         if (temperature < tr_target_temperature[heater_index] - hysteresis_degc && ELAPSED(millis(), *timer))

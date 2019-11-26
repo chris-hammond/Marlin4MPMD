@@ -301,7 +301,6 @@ private:
 	uint8_t file_subcall_ctr;
 	uint32_t filespos[SD_PROCEDURE_DEPTH];
 	char filenames[SD_PROCEDURE_DEPTH][MAXPATHNAMELENGTH];
-//	uint32_t filesize;
 	//int16_t n;
 
 	// This variable is used to determine if the autostart have to be check or not in the function checkautostart()
